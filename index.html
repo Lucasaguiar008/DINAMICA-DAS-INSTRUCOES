@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Leitura Atenta e Velocidade</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #65718a;
+      --primary: #3157d5;
+      --primary-dark: #2443ad;
+      --line: #e4e9f2;
+      --soft: #edf2ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 24px;
+      display: grid; place-items: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top left, #e6edff, var(--bg) 55%);
+      color: var(--ink);
+    }
+    .app {
+      width: min(720px, 100%); background: var(--card);
+      border: 1px solid var(--line); border-radius: 22px;
+      box-shadow: 0 18px 55px rgba(30, 48, 90, .12);
+      padding: clamp(22px, 5vw, 42px);
+    }
+    .topline { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .tag {
+      display:inline-flex; align-items:center; gap:7px; padding:8px 12px;
+      border-radius:999px; background:var(--soft); color:var(--primary);
+      font-size:.8rem; font-weight:700; letter-spacing:.03em;
+    }
+    .timer { font-variant-numeric: tabular-nums; font-weight:800; font-size:1.15rem; }
+    h1 { font-size:clamp(1.6rem, 4vw, 2.25rem); line-height:1.15; margin:22px 0 8px; }
+    .subtitle { color:var(--muted); margin:0 0 26px; line-height:1.55; }
+    .progress-row { display:flex; justify-content:space-between; color:var(--muted); font-size:.88rem; margin-bottom:9px; }
+    .track { height:9px; background:#edf0f6; border-radius:99px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:var(--primary); border-radius:99px; transition:width .25s ease; }
+    .instruction {
+      min-height: 205px; margin:28px 0 22px; padding:clamp(22px, 4vw, 34px);
+      display:flex; flex-direction:column; justify-content:center;
+      background:#fafbfe; border:1px solid var(--line); border-radius:18px;
+    }
+    .number { color:var(--primary); font-weight:800; font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px; }
+    .instruction-text { font-size:clamp(1.2rem, 3vw, 1.65rem); line-height:1.5; font-weight:600; }
+    .instruction-text.final { color:#8b2f24; }
+    .actions { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+    button {
+      border:0; border-radius:12px; padding:14px 21px; font-size:1rem;
+      font-weight:700; cursor:pointer; transition:transform .15s, background .15s;
+    }
+    button:active { transform:scale(.98); }
+    button:focus-visible { outline:3px solid #9eb2ff; outline-offset:3px; }
+    .primary { background:var(--primary); color:white; margin-left:auto; }
+    .primary:hover { background:var(--primary-dark); }
+    .secondary { background:#eef1f7; color:#39445a; }
+    .secondary:hover { background:#e2e7f0; }
+    .hidden { display:none !important; }
+    .intro, .finished { text-align:center; }
+    .intro-icon { font-size:2.6rem; margin:8px 0 12px; }
+    .notice {
+      margin:20px 0 26px; padding:15px 17px; border-radius:12px;
+      background:#fff8e8; color:#73551b; line-height:1.5; text-align:left;
+      border:1px solid #f4e5bd;
+    }
+    .start { margin:0 auto; }
+    .small { color:var(--muted); font-size:.88rem; line-height:1.5; }
+    .result-mark { font-size:3rem; margin:8px 0; }
+    @media (max-width:520px) {
+      body { padding:12px; }
+      .app { border-radius:16px; }
+      .actions button { flex:1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="intro" class="intro">
+      <div class="intro-icon">🧠</div>
+      <span class="tag">DINÂMICA • ATENÇÃO E LEITURA</span>
+      <h1>Teste de Leitura Atenta e Velocidade</h1>
+      <p class="subtitle">Leia cada instrução com atenção e avance usando o botão. O tempo total é de <strong>3 minutos</strong>.</p>
+      <div class="notice">
+        <strong>Orientação:</strong> tenha uma folha e um lápis à mão. As instruções fazem referência à folha física. Não avance por impulso: leia cada etapa com cuidado.
+      </div>
+      <button class="primary start" id="startBtn">Começar teste <span aria-hidden="true">→</span></button>
+      <p class="small" style="margin-top:18px">O cronômetro começa quando você clicar em “Começar teste”.</p>
+    </section>
+
+    <section id="test" class="hidden">
+      <div class="topline">
+        <span class="tag">TESTE EM ANDAMENTO</span>
+        <div class="timer" aria-live="off">⏱ <span id="time">03:00</span></div>
+      </div>
+      <h1>Leia com atenção</h1>
+      <p class="subtitle">Siga a sequência apresentada. O botão permite avançar para a próxima instrução.</p>
+      <div class="progress-row">
+        <span id="stepLabel">Instrução 1 de 12</span>
+        <span id="percent">8%</span>
+      </div>
+      <div class="track"><div class="bar" id="progress"></div></div>
+      <article class="instruction" aria-live="polite">
+        <div class="number" id="instructionNumber">Instrução 01</div>
+        <div class="instruction-text" id="instructionText"></div>
+      </article>
+      <div class="actions">
+        <button class="secondary" id="backBtn">← Voltar</button>
+        <button class="primary" id="nextBtn">Próxima instrução →</button>
+      </div>
+      <p class="small" style="margin:18px 0 0">Dica: o objetivo é avaliar a atenção à leitura, não apenas a velocidade.</p>
+    </section>
+
+    <section id="finished" class="finished hidden">
+      <div class="result-mark">🤫</div>
+      <span class="tag">ETAPA FINAL</span>
+      <h1>Instruções concluídas</h1>
+      <p class="subtitle" id="finishMessage">Permaneça em silêncio e aguarde o tempo acabar.</p>
+      <div class="notice" id="timerNotice">O cronômetro continuará contando até completar os 3 minutos.</div>
+      <button class="secondary" id="restartBtn">Reiniciar dinâmica</button>
+    </section>
+  </main>
+
+  <script>
+    const instructions = [
+      "Leia todas as instruções atentamente antes de fazer qualquer coisa.",
+      "Escreva seu nome completo no canto superior direito desta folha.",
+      'Circule a palavra "atentamente" na primeira instrução.',
+      "Desenhe cinco pequenos quadrados no canto esquerdo inferior da página.",
+      "Grite o seu primeiro nome em voz alta para que toda a sala ouça.",
+      "Escreva a data de hoje abaixo do seu nome.",
+      'Diga em voz alta: "Eu sou o líder deste teste!".',
+      "Faça três pequenos furos com a ponta do lápis no centro desta folha.",
+      "Some os números 145 e 234 mentalmente e escreva o resultado no verso da folha.",
+      "Se você acha que seguiu todas as regras até aqui, dê dois tapinhas na sua mesa.",
+      "Escreva o nome da sua matéria favorita ao lado do título deste teste.",
+      "Agora que você terminou de ler tudo, ignore os itens de 2 a 11. Faça apenas o que pede a instrução número 2 (escrever o seu nome) e aguarde em silêncio o tempo acabar."
+    ];
+
+    let current = 0;
+    let remaining = 180;
+    let timerId = null;
+
+    const intro = document.getElementById("intro");
+    const test = document.getElementById("test");
+    const finished = document.getElementById("finished");
+    const timeDisplay = document.getElementById("time");
+    const textDisplay = document.getElementById("instructionText");
+    const numberDisplay = document.getElementById("instructionNumber");
+    const stepLabel = document.getElementById("stepLabel");
+    const percent = document.getElementById("percent");
+    const progress = document.getElementById("progress");
+    const backBtn = document.getElementById("backBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60).toString().padStart(2, "0");
+      const sec = (seconds % 60).toString().padStart(2, "0");
+      return `${min}:${sec}`;
+    }
+
+    function updateTimer() {
+      timeDisplay.textContent = formatTime(remaining);
+      if (remaining <= 0) {
+        clearInterval(timerId);
+        timerId = null;
+        timeDisplay.textContent = "00:00";
+        if (!finished.classList.contains("hidden")) {
+          document.getElementById("finishMessage").textContent = "Tempo encerrado! A dinâmica foi concluída.";
+          document.getElementById("timerNotice").textContent = "Os 3 minutos terminaram.";
+        }
+        return;
+      }
+      remaining--;
+    }
+
+    function renderInstruction() {
+      const number = current + 1;
+      numberDisplay.textContent = `Instrução ${String(number).padStart(2, "0")}`;
+      textDisplay.textContent = instructions[current];
+      textDisplay.classList.toggle("final", current === 11);
+      stepLabel.textContent = `Instrução ${number} de ${instructions.length}`;
+      const value = Math.round((number / instructions.length) * 100);
+      percent.textContent = `${value}%`;
+      progress.style.width = `${value}%`;
+      backBtn.disabled = current === 0;
+      backBtn.style.opacity = current === 0 ? ".45" : "1";
+      nextBtn.textContent = current === instructions.length - 1 ? "Concluir →" : "Próxima instrução →";
+    }
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      intro.classList.add("hidden");
+      test.classList.remove("hidden");
+      current = 0;
+      remaining = 180;
+      updateTimer();
+      timerId = setInterval(updateTimer, 1000);
+      renderInstruction();
+    });
+
+    backBtn.addEventListener("click", () => {
+      if (current > 0) {
+        current--;
+        renderInstruction();
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (current < instructions.length - 1) {
+        current++;
+        renderInstruction();
+      } else {
+        test.classList.add("hidden");
+        finished.classList.remove("hidden");
+        document.getElementById("finishMessage").textContent =
+          remaining > 0 ? "Permaneça em silêncio e aguarde o tempo acabar." : "Tempo encerrado! A dinâmica foi concluída.";
+        document.getElementById("timerNotice").textContent =
+          remaining > 0 ? `Tempo restante: ${formatTime(remaining)}.` : "Os 3 minutos terminaram.";
+      }
+    });
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+      remaining = 180;
+      current = 0;
+      finished.classList.add("hidden");
+      test.classList.add("hidden");
+      intro.classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>
